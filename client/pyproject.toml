@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "client"
+version = "0.1.0"
+description = ""
+authors = ["saint1991 <se.mizuno.tech@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+grpcio = "^1.66.1"
+grpcio-tools = "^1.66.1"
+
+[tool.poetry.group.dev.dependencies]
+pysen = "0.11"
+black = "^24.8.0"
+flake8 = "^7.1.1"
+isort = "^5.13.2"
+
+[tool.pysen]
+version = "0.11"
+
+[tool.pysen.lint]
+enable_black = true
+enable_flake8 = true
+enable_isort = true
+enable_mypy = false
+line_length = 140
+py_version = "py312"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
