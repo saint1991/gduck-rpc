@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package gduck;
+
+import "message.proto";
+
+service DbService {
+  rpc Transaction(stream Request) returns (stream Response) {};
+}
