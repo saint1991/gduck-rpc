@@ -2,7 +2,37 @@ syntax = "proto3";
 
 package gduck;
 
-import "message.proto";
+import "google/protobuf/empty.proto";
+
+import "database.proto";
+import "error.proto";
+import "location.proto";
+import "query.proto";
+
+message Request {
+  oneof message {
+    Connect connect = 1;
+    Query query = 2;
+  }
+}
+
+message Response {
+
+  message QueryResult {
+    oneof kind {
+      google.protobuf.Empty ok = 1;
+      ScalarValue value = 2;
+      Rows rows = 3;
+      Location parquet_file = 4;
+    }
+  }
+
+  oneof result {
+    QueryResult success = 1;
+    Error error = 2;
+  }
+}
+
 
 service DbService {
   rpc Transaction(stream Request) returns (stream Response) {};

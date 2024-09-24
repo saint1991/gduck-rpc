@@ -3,71 +3,66 @@ use std::pin::Pin;
 
 use tokio_stream::{Stream, StreamExt};
 
-use gduck::db_service_server::{DbService, DbServiceServer};
-
-pub mod gduck {
-    tonic::include_proto!("gduck");
-}
-
-impl From<gduck::request::connect::Mode> for duckdb::AccessMode {
-    fn from(value: gduck::request::connect::Mode) -> Self {
-        match value {
-            gduck::request::connect::Mode::Auto => duckdb::AccessMode::Automatic,
-            gduck::request::connect::Mode::ReadWrite => duckdb::AccessMode::ReadWrite,
-            gduck::request::connect::Mode::ReadOnly => duckdb::AccessMode::ReadOnly,
-        }
-    }
-}
+use crate::proto;
+use crate::proto::db_service_server as grpc;
 
 #[derive(Debug)]
 pub struct DuckDbService {}
 
 #[tonic::async_trait]
-impl DbService for DuckDbService {
+impl grpc::DbService for DuckDbService {
     type TransactionStream =
-        Pin<Box<dyn Stream<Item = Result<gduck::Response, tonic::Status>> + Send + 'static>>;
+        Pin<Box<dyn Stream<Item = Result<proto::Response, tonic::Status>> + Send + 'static>>;
 
     async fn transaction(
         &self,
-        request: tonic::Request<tonic::Streaming<gduck::Request>>,
+        request: tonic::Request<tonic::Streaming<proto::Request>>,
     ) -> Result<tonic::Response<Self::TransactionStream>, tonic::Status> {
         let mut stream = request.into_inner();
 
-        let connection = stream.try_next().await?.and_then(|request| {
+        let gduck = stream.try_next().await?.and_then(|request| {
             request.message.map(|message| {
-                log::info!("{:?}", message);
-
-                if let gduck::request::Message::Connect(c) = message {
-                    duckdb::Connection::open_with_flags(
-                        &c.file_name,
-                        duckdb::Config::default().access_mode(c.mode().into())?,
-                    )
-                    .map_err(|err| anyhow::Error::from(err))
+                if let proto::request::Message::Connect(c) = message {
+                    crate::gduck::Gduck::connect(c)
                 } else {
-                    Err(anyhow::anyhow!(
-                        "Transaction must begin with Connect message."
-                    ))
+                    Err(crate::error::Error::ProtocolError {
+                        message: String::from("Transaction must begin with Connect message."),
+                    })
                 }
             })
         });
 
-        match connection {
-            Some(Ok(conn)) => {
+        match gduck {
+            Some(Ok(gduck)) => {
                 let output = async_stream::stream! {
                     while let Some(request) = stream.try_next().await? {
-                        match request.message {
-                            Some(gduck::request::Message::Query(q)) => {
-                                let query = q.query;
-                                log::info!("{}", &query);
+                        if let Some(proto::request::Message::Query(q)) = request.message {
+                            let query_result = match q.kind {
+                                Some(proto::query::Kind::Execute(q)) => gduck.execute(q.query, q.params.unwrap_or_default()),
+                                Some(proto::query::Kind::Value(q)) => gduck.query_value(q.query, q.params.unwrap_or_default()),
+                                Some(proto::query::Kind::Rows(q)) => gduck.query_rows(q.query, q.params.unwrap_or_default()),
+                                Some(proto::query::Kind::Ctas(ctas)) => gduck.create_table_as(ctas.table_name, ctas.query, ctas.params.unwrap_or_default()),
+                                Some(proto::query::Kind::Parquet(pq)) => {
+                                    match pq.location {
+                                        Some(l) => crate::uri::Uri::try_from(l).and_then(|loc| gduck.query_as_parquet(pq.query, pq.params.unwrap_or_default(), loc)),
+                                        None => Err(crate::error::Error::InvalidRequest(String::from("Parquet file location is required.")))
+                                    }
+                                }
+                                kind => Err(crate::error::Error::ProtocolError { message: format!("Unknown query: {:?}", kind) })
+                            };
 
-                                let result = conn.query_row(&query, [], |row| { row.get::<usize, String>(0) })
-                                    .map_err(|err| { tonic::Status::new(tonic::Code::Unknown, err.to_string()) })?;
-                                yield Ok(gduck::Response{result: Some(gduck::response::QueryResult{result: format!("{:?}", result)})});
-                            },
-                            _ => {
-                                yield Err(tonic::Status::new(tonic::Code::Internal, "Unknown type of request received."));
+                            match query_result {
+                                Ok(result) => {
+                                    yield Ok(proto::Response{ result: Some(proto::response::Result::Success(result))})
+                                },
+                                Err(err) => {
+                                    yield Err(tonic::Status::new(tonic::Code::Internal, err.to_string()));
+                                }
                             }
+                        } else {
+                            yield Err(tonic::Status::new(tonic::Code::Internal, "Unknown type of request received."));
                         }
+
                     }
                     log::info!("DONE");
                     yield Err(tonic::Status::ok("Completed successfully."))
@@ -87,7 +82,7 @@ impl DuckDbService {
         DuckDbService {}
     }
 
-    pub fn new_server() -> DbServiceServer<DuckDbService> {
-        DbServiceServer::new(DuckDbService::new())
+    pub fn new_server() -> grpc::DbServiceServer<DuckDbService> {
+        grpc::DbServiceServer::new(DuckDbService::new())
     }
 }

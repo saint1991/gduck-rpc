@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package gduck;
+
+enum ErrorCode {
+    ERROR_CODE_UNSPECIFIED = 0;
+    ERROR_CODE_INTERNAL = 1;
+}
+
+message Error {
+    ErrorCode code = 1;
+    string message = 2;
+}

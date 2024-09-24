@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package gduck;
+
+message Location {
+   
+    message LocalFile {
+        string path = 1;
+    }
+
+    oneof kind {
+        LocalFile local = 1;
+    }
+}

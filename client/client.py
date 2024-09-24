@@ -8,10 +8,7 @@ from typing import Literal, Self
 
 import grpc
 from grpc._channel import _MultiThreadedRendezvous
-from message_pb2 import Request
 from service_pb2_grpc import DbServiceStub
-
-ConnectionMode = Literal["auto", "read_write", "read_only"]
 
 
 @dataclass(frozen=True)
@@ -100,7 +97,7 @@ class DuckDbTransaction:
         elif self._mode == "read_write":
             return Request.Connect.Mode.MODE_READ_WRITE
         elif self._mode == "read_only":
-            return Request.Connect.Mode.MODE_READ_ONLY 
+            return Request.Connect.Mode.MODE_READ_ONLY
         else:
             raise ValueError(f"Unknown mode: {self._mode}")
 

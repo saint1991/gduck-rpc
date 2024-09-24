@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package gduck;
+
+import "database.proto";
+import "location.proto";
+
+message Query {
+
+    message Execute {
+        string query = 1;
+        Params params = 2;
+    }
+
+    message QueryValue {
+        string query = 1;
+        Params params = 2;
+    }
+
+    message QueryRows {
+        string query = 1;
+        Params params = 2;
+    }
+
+    message CreateTableAsQuery {
+        string table_name = 1;
+        string query = 2;
+        Params params = 3;
+    }
+
+    message ParquetQuery {
+        Location location = 1;
+        string query = 2;
+        Params params = 3;
+    }
+
+    oneof kind {
+        Execute execute = 1;
+        QueryValue value = 2;
+        QueryRows rows = 3;
+        CreateTableAsQuery ctas = 4;
+        ParquetQuery parquet = 5;
+    }
+}

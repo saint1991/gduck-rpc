@@ -5,16 +5,19 @@ edition = "2021"
 
 [dependencies]
 anyhow = { version = "1.0.89", features = ["backtrace", "std"] }
-async-stream = { version = "0.3.5" }
-duckdb = { version = "1.0.0", features = ["bundled"] }
+async-stream = { version = "0.3.6" }
+chrono = { version = "0.4.38" }
+duckdb = { version = "1.0.0", features = ["bundled", "chrono"] }
 env_logger = { version = "0.11.5" }
-futures-core = { version = "0.3.30" }
+futures-core = { version = "0.3.31" }
 log = { version = "0.4.22" }
-prost = { version = "0.13.2" }
+prost = { version = "0.13.3" }
+prost-types = { version = "0.13.3" }
+thiserror = "1.0.64"
 tokio = { version = "1.40.0", features = ["rt-multi-thread", "macros", "sync" ] }
 tokio-stream = { version = "0.1.16" }
-tonic = { version = "0.12.2" }
+tonic = { version = "0.12.3" }
 
 
 [build-dependencies]
-tonic-build = { version = "0.12.2" }
+tonic-build = { version = "0.12.3" }
