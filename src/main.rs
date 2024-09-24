@@ -1,4 +1,8 @@
+mod error;
+mod gduck;
+mod proto;
 mod service;
+mod uri;
 
 use std::net::SocketAddr;
 
