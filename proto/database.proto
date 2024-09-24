@@ -1,0 +1,97 @@
+syntax = "proto3";
+
+package gduck;
+
+import "google/protobuf/struct.proto";
+import "google/protobuf/timestamp.proto";
+
+message Connect {
+    enum Mode {
+      MODE_AUTO = 0;
+      MODE_READ_WRITE = 1;
+      MODE_READ_ONLY = 2;
+    }
+
+    string file_name = 1;
+    Mode mode = 2;
+  }
+
+enum DataType {
+    DATATYPE_UNSPECIFIED = 0;
+    DATATYPE_NULL = 1;
+    DATATYPE_BOOL = 2;
+    DATATYPE_INT = 3;
+    DATATYPE_UINT = 4;
+    DATATYPE_DOUBLE = 5;
+    DATATYPE_DECIMAL= 6;
+    DATATYPE_STRING = 7;
+    DATATYPE_DATETIME = 8;
+    DATATYPE_DATE = 9;
+    DATATYPE_TIME = 10;
+    DATATYPE_INTERVAL = 11;
+}
+
+message Column {
+    string name = 1;
+    DataType data_type = 2;
+}
+
+message Schema {
+    repeated Column columns = 1;
+}
+
+// refered to https://github.com/googleapis/googleapis/blob/master/google/type/decimal.proto
+message Decimal {
+    string value = 1;
+}
+
+//　refered to https://github.com/googleapis/googleapis/blob/master/google/type/date.proto
+message Date {
+    int32 year = 1;
+    uint32 month = 2;
+    uint32 day = 3;
+}
+
+// refered to https://github.com/googleapis/googleapis/blob/master/google/type/timeofday.proto
+message Time {
+    uint32 hours = 1;
+    uint32 minutes = 2;
+    uint32 seconds = 3;
+    uint32 nanos = 4;
+}
+
+message Interval {
+    int32 months = 1;
+    int32 days = 2;
+    int64 nanos = 3;
+}
+
+message ScalarValue {
+    oneof kind {
+        google.protobuf.NullValue null_value = 1;
+        bool bool_value = 2;
+        int64 int_value = 3;
+        uint64 uint_value = 4;
+        double double_value = 5;
+        Decimal decimal_value = 6;
+        string str_value = 7;
+        google.protobuf.Timestamp datetime_value = 8;
+        Date date_value = 9;
+        Time time_value = 10;
+        Interval interval_value = 11;
+    }
+}
+
+message Params {
+    repeated ScalarValue params = 1;
+}
+
+message Row {
+    repeated ScalarValue values = 1;
+}
+
+message Rows {
+    Schema schema = 1;
+    repeated Row rows = 2;
+}
+
