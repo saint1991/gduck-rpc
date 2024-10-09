@@ -1,12 +1,14 @@
+import math
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from typing import Literal, TypeAlias
 
-from database_pb2 import Connect, DataType
+from database_pb2 import Connect, DataType, Date
 from database_pb2 import Decimal as ProtoDecimal
-from database_pb2 import Params, Row, Rows, ScalarValue, Schema
+from database_pb2 import Interval, Params, Row, Rows, ScalarValue, Schema, Time
 from error_pb2 import Error, ErrorCode
 from google.protobuf.struct_pb2 import NULL_VALUE
+from google.protobuf.timestamp_pb2 import Timestamp
 from location_pb2 import Location
 from query_pb2 import Query
 
@@ -42,3 +44,14 @@ def _value(v: Value) -> ScalarValue:
         return ScalarValue(decimal_value=ProtoDecimal(value=str(v)))
     elif type(v) is str:
         return ScalarValue(str_value=v)
+    elif type(v) is datetime:
+        fraction, seconds = math.modf(v.timestamp())
+        return ScalarValue(datetime_value=Timestamp(seconds=int(seconds), nanos=int(fraction * 1000000000)))
+    elif type(v) is date:
+        return ScalarValue(date_value=Date(year=v.year, month=v.month, day=v.day))
+    elif type(v) is time:
+        return ScalarValue(time_value=Time(hours=v.hour, minutes=v.minute, seconds=v.second, nanos=v.microsecond * 1000))
+    elif type(v) is timedelta:
+        pass
+    else:
+        raise ValueError(f"Invalid type of value: {v} ({type(v)})")
