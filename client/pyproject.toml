@@ -1,20 +1,12 @@
-[tool.poetry]
+[project]
 name = "client"
 version = "0.1.0"
-description = ""
-authors = ["saint1991 <se.mizuno.tech@gmail.com>"]
-readme = "README.md"
-
-[tool.poetry.dependencies]
-python = "^3.12"
-grpcio = "^1.66.1"
-grpcio-tools = "^1.66.1"
-
-[tool.poetry.group.dev.dependencies]
-pysen = "0.11"
-black = "^24.8.0"
-flake8 = "^7.1.1"
-isort = "^5.13.2"
+requires-python = ">=3.13"
+dependencies = [
+    "grpcio-tools>=1.66.2",
+    "grpcio>=1.66.2",
+    "python-dateutil>=2.9.0.post0",
+]
 
 [tool.pysen]
 version = "0.11"
@@ -27,6 +19,11 @@ enable_mypy = false
 line_length = 140
 py_version = "py312"
 
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+dev-dependencies = [
+    "black>=24.10.0",
+    "flake8>=7.1.1",
+    "isort>=5.13.2",
+    "pysen>=0.11.0",
+]
+
