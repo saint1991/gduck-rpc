@@ -4,10 +4,13 @@ import threading
 from dataclasses import dataclass
 from queue import SimpleQueue
 from types import TracebackType
-from typing import Literal, Self
+from typing import Self
 
 import grpc
+import request as proto
 from grpc._channel import _MultiThreadedRendezvous
+from request import ConnectionMode, Value
+from service_pb2 import Request
 from service_pb2_grpc import DbServiceStub
 
 
@@ -71,9 +74,14 @@ class DuckDbTransaction:
         while (request := self._requests.get()) != self._END_STREAM:
             yield request
 
-    def query(self, query: str) -> None:
-        self._requests.put(self._query_request(query))
-        return self._results.get()
+    def execute(self, query: str, *params: tuple[Value]) -> None:
+        self._requests.put(proto.request(proto.execute(query, *params)))
+        self._results.get()
+
+    def query_value(self, query: str, *params: tuple[Value]) -> Value:
+        self._requests.put(proto.request(proto.value(query, *params)))
+        result = self._results.get()
+        # TODO
 
     def __enter__(self) -> Self:
         self._channel = grpc.insecure_channel(target=str(self._addr))
@@ -90,20 +98,5 @@ class DuckDbTransaction:
         self._channel.close()
         return False
 
-    @property
-    def mode(self) -> Request.Connect.Mode:
-        if self._mode == "auto":
-            return Request.Connect.Mode.MODE_AUTO
-        elif self._mode == "read_write":
-            return Request.Connect.Mode.MODE_READ_WRITE
-        elif self._mode == "read_only":
-            return Request.Connect.Mode.MODE_READ_ONLY
-        else:
-            raise ValueError(f"Unknown mode: {self._mode}")
-
     def _connect_request(self) -> Request:
-        return Request(connect=Request.Connect(file_name=self._database_file, mode=self.mode))
-
-    @staticmethod
-    def _query_request(query: str) -> Request:
-        return Request(query=Request.Query(query=query))
+        return proto.request(kind=proto.connect(file_name=self._database_file, mode=self._mode))
