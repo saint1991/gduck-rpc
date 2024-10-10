@@ -15,7 +15,7 @@
             "name":"Debug Python client",
             "type":"debugpy",
             "request":"launch",
-            "program":"${workspaceFolder}/client/client.py",
+            "program":"${workspaceFolder}/client/main.py",
             "console":"integratedTerminal",
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/client/gen"

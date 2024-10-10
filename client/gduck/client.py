@@ -2,13 +2,20 @@ from __future__ import annotations
 
 import threading
 from dataclasses import dataclass
+from pathlib import Path
 from queue import SimpleQueue
 from types import TracebackType
-from typing import Literal, Self
+from typing import Self
 
 import grpc
+from error_pb2 import Error
 from grpc._channel import _MultiThreadedRendezvous
+from query_pb2 import Query
+from service_pb2 import Request, Response
 from service_pb2_grpc import DbServiceStub
+
+from .request import ConnectionMode, Value, connect, ctas, execute, local_file, parquet, request, rows, value
+from .response import parse_location, parse_rows, parse_value
 
 
 @dataclass(frozen=True)
@@ -46,7 +53,10 @@ class ResponseHandlerThread(threading.Thread):
     def run(self) -> None:
         try:
             for response in self._responses:
-                self._out.put(response.result)
+                if response.HasField("success"):
+                    self._out.put(response.success)
+                elif response.HasField("error"):
+                    self._out.put(response.error)
         except _MultiThreadedRendezvous as e:
             if e.code() != grpc.StatusCode.CANCELLED:
                 raise e
@@ -71,9 +81,28 @@ class DuckDbTransaction:
         while (request := self._requests.get()) != self._END_STREAM:
             yield request
 
-    def query(self, query: str) -> None:
-        self._requests.put(self._query_request(query))
+    def _query(self, query: Query) -> Response.QueryResult | Error:
+        self._requests.put(request(query))
         return self._results.get()
+
+    def execute(self, query: str, *params: tuple[Value]) -> None:
+        self._query(execute(query, *params))
+
+    def query_value(self, query: str, *params: tuple[Value]) -> Value:
+        result = self._query(value(query, *params))
+        return parse_value(result.value)
+
+    def query_rows(self, query: str, *params: tuple[Value]) -> Value:
+        result = self._query(rows(query, *params))
+        _, r = parse_rows(result.rows)
+        return r
+
+    def ctas(self, table_name: str, query: str, *params: tuple[Value]) -> None:
+        self._query(ctas(table_name, query, *params))
+
+    def local_parquet(self, file: Path, query: str, *params: tuple[Value]) -> Path:
+        result = self._query(parquet(local_file(file), query, *params))
+        return parse_location(result.parquet_file)
 
     def __enter__(self) -> Self:
         self._channel = grpc.insecure_channel(target=str(self._addr))
@@ -90,20 +119,5 @@ class DuckDbTransaction:
         self._channel.close()
         return False
 
-    @property
-    def mode(self) -> Request.Connect.Mode:
-        if self._mode == "auto":
-            return Request.Connect.Mode.MODE_AUTO
-        elif self._mode == "read_write":
-            return Request.Connect.Mode.MODE_READ_WRITE
-        elif self._mode == "read_only":
-            return Request.Connect.Mode.MODE_READ_ONLY
-        else:
-            raise ValueError(f"Unknown mode: {self._mode}")
-
     def _connect_request(self) -> Request:
-        return Request(connect=Request.Connect(file_name=self._database_file, mode=self.mode))
-
-    @staticmethod
-    def _query_request(query: str) -> Request:
-        return Request(query=Request.Query(query=query))
+        return request(kind=connect(file_name=self._database_file, mode=self._mode))
