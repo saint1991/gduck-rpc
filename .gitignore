@@ -2,4 +2,5 @@ target
 gen
 *.duckdb
 .env
+.DS_Store
 datasets
