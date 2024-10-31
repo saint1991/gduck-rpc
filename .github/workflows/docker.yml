@@ -1,0 +1,40 @@
+name: "docker build and push"
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/docker.yml
+      - proto/**.proto
+      - src/**
+      - Cargo.toml
+      - Cargo.lock
+  push:
+    tags:
+      - '*'
+
+env:
+  PUBLISH: ${{ github.ref_type == 'tags' }}
+  IMAGE: saint1991/gduck
+  TAG: ${{ github.ref_type == 'tags' && github.ref_name || github.sha }}
+
+jobs:
+  docker_build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: check publish
+      run: echo '${{ env.PUBLISH }}'
+    - uses: actions/checkout@v4
+    - uses: docker/setup-buildx-action@v3
+    - uses: docker/login-action@v3
+      with:
+        username: ${{ vars.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+    - uses: docker/build-push-action@v6
+      with:
+        context: .
+        push: ${{ env.PUBLISH == 'true' }}
+        cache-from: ${{ format('type=registry,ref={0}:{1}', env.IMAGE, 'buildcache') }}
+        cache-to: ${{ format('type=registry,ref={0}:{1},mode=max', env.IMAGE, 'buildcache') }}
+        tags: |
+          ${{ format('{0}:{1}', env.IMAGE, 'latest')  }}
+          ${{ format('{0}:{1}', env.IMAGE, env.TAG) }}
