@@ -1,6 +1,7 @@
 # syntax=docker/dockerfile:1
 
-FROM rust:1.82-slim-bookworm AS builder
+ARG RUST_VERSION=1.82
+FROM rust:${RUST_VERSION}-slim-bookworm AS builder
 
 WORKDIR /home/gduck
 RUN apt-get update -y \
@@ -11,12 +12,12 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/home/gduck/target \
     cargo build --release \
  && mkdir /home/gduck/dist \
- && cp /home/gduck/target/release/gduck-rpc /home/gduck/dist 
+ && cp /home/gduck/target/release/gduck /home/gduck/dist 
 
 
 FROM debian:bookworm-slim
 
-COPY --from=builder /home/gduck/dist/gduck-rpc /gduck-rpc
+COPY --from=builder /home/gduck/dist/gduck /gduck
 ENV RUST_LOG=info RUST_BACKTRACE=1
 
-ENTRYPOINT ["/gduck-rpc"]
+ENTRYPOINT ["/gduck"]

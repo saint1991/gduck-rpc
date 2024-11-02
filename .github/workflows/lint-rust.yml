@@ -1,0 +1,21 @@
+name: check-rust
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/lint-rust.yml
+      - **.rs
+      - Cargo.toml
+      - Cargo.lock
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - name: Rust format check
+      run: cargo fmt --check
