@@ -1,10 +1,11 @@
-name: check-rust
+name: lint-rust
 
 on:
   pull_request:
     paths:
-      - .github/workflows/lint-rust.yml
-      - **.rs
+      - .github/workflows/docker.yml
+      - src/**.rs
+      - build.rs
       - Cargo.toml
       - Cargo.lock
 

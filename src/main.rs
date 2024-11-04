@@ -29,9 +29,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     env_logger::init();
     let addr: SocketAddr = format!("{}:{}", args.bind_address, args.port).parse()?;
 
+    let (mut reporter, health_service) = tonic_health::server::health_reporter();
+    reporter
+        .set_serving::<proto::db_service_server::DbServiceServer<service::DuckDbService>>()
+        .await;
+
     let service = service::DuckDbService::new_server();
 
     log::info!("Start listening on {}", addr.to_string());
-    Server::builder().add_service(service).serve(addr).await?;
+    Server::builder()
+        .add_service(health_service)
+        .add_service(service)
+        .serve(addr)
+        .await?;
     Ok(())
 }
