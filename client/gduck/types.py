@@ -4,10 +4,13 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Iterator, Self, TypeAlias
 
-from database_pb2 import Column as ProtoColumn
-from database_pb2 import DataType
-from database_pb2 import Schema as ProtoSchema
 from dateutil.relativedelta import relativedelta
+
+from .proto.database_pb2 import Column as ProtoColumn
+from .proto.database_pb2 import DataType
+from .proto.database_pb2 import Schema as ProtoSchema
+
+__all__ = ["Value", "Column", "Schema", "Rows", "ParquetLocation"]
 
 Value: TypeAlias = bool | int | float | Decimal | str | datetime | date | time | relativedelta | None
 

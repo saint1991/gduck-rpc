@@ -5,10 +5,10 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Callable
 
-from database_pb2 import DataType, Rows, ScalarValue
 from dateutil.relativedelta import relativedelta
-from location_pb2 import Location
 
+from .proto.database_pb2 import DataType, Rows, ScalarValue
+from .proto.location_pb2 import Location
 from .types import ParquetLocation, Schema, Value
 
 __all__ = ["parse_value", "parse_rows", "parse_location"]
