@@ -5,17 +5,19 @@ from dataclasses import dataclass
 from pathlib import Path
 from queue import SimpleQueue
 from types import TracebackType
-from typing import Self
+from typing import Generator, Self
 
 import grpc
-from error_pb2 import Error
 from grpc._channel import _MultiThreadedRendezvous
-from query_pb2 import Query
-from service_pb2 import Request, Response
-from service_pb2_grpc import DbServiceStub
 
+from .proto.error_pb2 import Error
+from .proto.query_pb2 import Query
+from .proto.service_pb2 import Request, Response
+from .proto.service_pb2_grpc import DbServiceStub
 from .request import ConnectionMode, Value, connect, ctas, execute, local_file, parquet, request, rows, value
 from .response import parse_location, parse_rows, parse_value
+
+__all__ = ["Addr", "Connection", "DuckDbTransaction"]
 
 
 @dataclass(frozen=True)
@@ -75,7 +77,7 @@ class DuckDbTransaction:
         self._results = SimpleQueue()
 
     # This block executed in other thread
-    def _request_generator(self):
+    def _request_generator(self) -> Generator[Request, None, None]:
         yield self._connect_request()
 
         while (request := self._requests.get()) != self._END_STREAM:

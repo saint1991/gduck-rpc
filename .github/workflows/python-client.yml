@@ -1,0 +1,28 @@
+name: build-python-client
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/lint-python.yml
+      - client/**.py
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+    - uses: astral-sh/setup-uv@v3
+      with:
+        version: "0.4.29"
+    - name: Install dependencies
+      run: uv sync
+      working-directory: ./client
+    - name: Build wheel file
+      run: ./build.sh
+      working-directory: ./client

@@ -1,3 +1,7 @@
-gen
+gduck/proto
+build
+dist
+*.egg-info
 __pycache__
 .venv
+.mypy_cache

@@ -4,16 +4,16 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
-from database_pb2 import Connect, Date
-from database_pb2 import Decimal as ProtoDecimal
-from database_pb2 import Interval, Params, ScalarValue, Time
 from dateutil.relativedelta import relativedelta
 from google.protobuf.struct_pb2 import NULL_VALUE
 from google.protobuf.timestamp_pb2 import Timestamp
-from location_pb2 import Location
-from query_pb2 import Query
-from service_pb2 import Request
 
+from .proto.database_pb2 import Connect, Date
+from .proto.database_pb2 import Decimal as ProtoDecimal
+from .proto.database_pb2 import Interval, Params, ScalarValue, Time
+from .proto.location_pb2 import Location
+from .proto.query_pb2 import Query
+from .proto.service_pb2 import Request
 from .types import Value
 
 __all__ = ["ConnectionMode", "connect", "local_file", "execute", "value", "rows", "ctas", "parquet", "request"]
