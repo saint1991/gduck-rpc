@@ -36,7 +36,7 @@ impl Gduck {
             })
             .collect::<Result<prost::alloc::vec::Vec<proto::Column>>>()?;
 
-        Ok(proto::Schema { columns: columns })
+        Ok(proto::Schema { columns })
     }
 
     pub fn execute<Q: AsRef<str>>(
@@ -103,7 +103,7 @@ impl Gduck {
         Ok(proto::response::QueryResult {
             kind: Some(proto::response::query_result::Kind::Rows(proto::Rows {
                 schema: Some(schema),
-                rows: rows,
+                rows,
             })),
         })
     }
@@ -127,7 +127,7 @@ impl Gduck {
         let sql = sql.as_ref().trim();
         let query = format!(
             "COPY ({}) TO '{}' (FORMAT PARQUET)",
-            sql.strip_suffix(";").unwrap_or_else(|| sql),
+            sql.strip_suffix(";").unwrap_or(sql),
             uri
         );
         self.execute(query, params).and_then(|_| {

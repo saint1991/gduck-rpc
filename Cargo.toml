@@ -4,22 +4,22 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = { version = "1.0.92", features = ["backtrace", "std"] }
+anyhow = { version = "1.0.98", features = ["backtrace", "std"] }
 async-stream = { version = "0.3.6" }
-chrono = { version = "0.4.38" }
-clap = { version = "4.5.20", features = ["derive"] }
-duckdb = { version = "1.1.1", features = ["bundled", "chrono"] }
-env_logger = { version = "0.11.5" }
+chrono = { version = "0.4.41" }
+clap = { version = "4.5.37", features = ["derive"] }
+duckdb = { version = "1.2.2", features = ["bundled", "chrono"] }
+env_logger = { version = "0.11.8" }
 futures-core = { version = "0.3.31" }
-log = { version = "0.4.22" }
-prost = { version = "0.13.3" }
-prost-types = { version = "0.13.3" }
-thiserror = { version = "1.0.67" }
-tokio = { version = "1.41.0", features = ["rt-multi-thread", "macros", "sync" ] }
-tokio-stream = { version = "0.1.16" }
-tonic = { version = "0.12.3" }
-tonic-health = { version = "0.12.3" }
+log = { version = "0.4.27" }
+prost = { version = "0.13.5" }
+prost-types = { version = "0.13.5" }
+thiserror = { version = "2.0.12" }
+tokio = { version = "1.44.2", features = ["rt-multi-thread", "macros", "sync" ] }
+tokio-stream = { version = "0.1.17" }
+tonic = { version = "0.13.0" }
+tonic-health = { version = "0.13.0" }
 
 
 [build-dependencies]
-tonic-build = { version = "0.12.3" }
+tonic-build = { version = "0.13.0" }
