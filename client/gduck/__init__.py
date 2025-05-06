@@ -1,4 +1,4 @@
-# flake8: noqa: F401,F402,F403
+# flake8: noqa: F401,F402,F403,E402
 import sys
 from pathlib import Path
 
