@@ -24,7 +24,7 @@ pub enum Error {
 
 impl Error {
     pub const fn unsupported_type(t: duckdb::types::Type) -> Self {
-        Error::UnsupportedTypeError { t: t }
+        Error::UnsupportedTypeError { t }
     }
 
     pub fn internal<S: AsRef<str>>(message: S) -> Self {

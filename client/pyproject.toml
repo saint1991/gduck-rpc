@@ -3,29 +3,25 @@ name = "gduck-client"
 version = "0.1.0"
 requires-python = ">=3.10"
 dependencies = [
-    "grpcio-tools>=1.67.1",
-    "grpcio>=1.67.1",
+    "grpcio-tools>=1.71.0",
+    "grpcio>=1.71.0",
     "python-dateutil>=2.9.0.post0",
 ]
+
+[tool.ruff]
+line-length = 140
+
+[tool.ruff.lint]
+
 
 [tool.pysen]
 version = "0.11"
 
-[tool.pysen.lint]
-enable_black = true
-enable_flake8 = true
-enable_isort = true
-enable_mypy = false
-line_length = 140
-py_version = "py312"
-
 [tool.uv]
 dev-dependencies = [
-    "black>=24.10.0",
-    "flake8>=7.1.1",
-    "isort>=5.13.2",
-    "pysen>=0.11.0",
-    "pytest>=8.3.3",
-    "testcontainers>=4.8.2",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "pytest-benchmark>=5.1.0",
+    "ruff>=0.11.8",
+    "testcontainers>=4.10.0",
 ]
-

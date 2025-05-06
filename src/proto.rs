@@ -221,7 +221,7 @@ impl duckdb::types::FromSql for scalar_value::Kind {
             duckdb::types::ValueRef::Float(v) => Ok(scalar_value::Kind::DoubleValue(f64::from(v))),
             duckdb::types::ValueRef::Double(v) => Ok(scalar_value::Kind::DoubleValue(v)),
             duckdb::types::ValueRef::Decimal(v) => Ok(scalar_value::Kind::DecimalValue(Decimal {
-                value: prost::alloc::string::String::from(v.to_string()),
+                value: v.to_string(),
             })),
             duckdb::types::ValueRef::Timestamp(..) => chrono::NaiveDateTime::column_result(value)
                 .and_then(|dt| {
@@ -238,12 +238,9 @@ impl duckdb::types::FromSql for scalar_value::Kind {
                                 utc.timestamp_micros() * 1000,
                             ))
                         })
-                        .map(|nanos| prost_types::Timestamp {
-                            seconds: seconds,
-                            nanos: nanos,
-                        })
+                        .map(|nanos| prost_types::Timestamp { seconds, nanos })
                 })
-                .map(|timestamp| scalar_value::Kind::DatetimeValue(timestamp)),
+                .map(scalar_value::Kind::DatetimeValue),
             duckdb::types::ValueRef::Date32(_) => {
                 chrono::NaiveDate::column_result(value).map(|dt| {
                     scalar_value::Kind::DateValue(Date {
@@ -273,7 +270,7 @@ impl duckdb::types::FromSql for scalar_value::Kind {
                 nanos,
             })),
             duckdb::types::ValueRef::Text(v) => String::from_utf8(v.to_owned())
-                .map(|str| scalar_value::Kind::StrValue(str))
+                .map(scalar_value::Kind::StrValue)
                 .map_err(|err| {
                     duckdb::types::FromSqlError::Other(Box::new(crate::error::Error::internal(
                         err.to_string(),
