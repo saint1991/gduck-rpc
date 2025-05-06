@@ -1,0 +1,14 @@
+
+services:
+
+  gduck:
+    image: gduck:latest
+    build:
+      context: .
+  
+  postgres:
+    image: postgres:15.3-alpine
+    environment:
+      POSTGRES_USER: gduck
+      POSTGRES_PASSWORD: gduck
+      POSTGRES_DB: gduck
