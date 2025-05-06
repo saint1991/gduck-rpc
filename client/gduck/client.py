@@ -10,7 +10,7 @@ from typing import Generator, Self
 import grpc
 from grpc._channel import _MultiThreadedRendezvous
 
-from .proto.error_pb2 import Error
+from .exceptions import GduckRpcError, GduckServerError
 from .proto.query_pb2 import Query
 from .proto.service_pb2 import Request, Response
 from .proto.service_pb2_grpc import DbServiceStub
@@ -58,10 +58,10 @@ class ResponseHandlerThread(threading.Thread):
                 if response.HasField("success"):
                     self._out.put(response.success)
                 elif response.HasField("error"):
-                    self._out.put(response.error)
+                    self._out.put(GduckServerError.from_proto(response.error))
         except _MultiThreadedRendezvous as e:
             if e.code() != grpc.StatusCode.CANCELLED:
-                raise e
+                self._out.put(GduckRpcError(e))
 
 
 class DuckDbTransaction:
@@ -83,9 +83,13 @@ class DuckDbTransaction:
         while (request := self._requests.get()) != self._END_STREAM:
             yield request
 
-    def _query(self, query: Query) -> Response.QueryResult | Error:
+    def _query(self, query: Query) -> Response.QueryResult:
         self._requests.put(request(query))
-        return self._results.get()
+        result = self._results.get()
+        if isinstance(result, Exception):
+            raise result
+        else:
+            return result
 
     def execute(self, query: str, *params: tuple[Value]) -> None:
         self._query(execute(query, *params))
